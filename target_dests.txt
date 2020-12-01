@@ -1,0 +1,10 @@
+case.edu
+youtube.com
+facebook.com
+sis.case.edu
+google.com
+github.com
+calendar.google.com
+canvas.case.edu
+linkedin.com
+flutter.dev
