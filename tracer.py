@@ -2,6 +2,7 @@ import struct
 import time
 import socket
 import select
+import sys
 
 
 max_hop = 32
@@ -12,9 +13,18 @@ VERBOSE = True
 
 
 def set_socket(ttl):
-    rcv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-    snd_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    try:
+	    rcv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
+    except socket.error as exc:
+	    print('Receive socket could not be created. Error : ' + str(exc))
+	    sys.exit()
 
+    try:
+	    snd_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    except socket.error as exc:
+	    print('Send socket could not be created. Error : ' + str(exc))
+	    sys.exit()
+    
     rcv_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
     snd_socket.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
 
@@ -62,7 +72,7 @@ def get_hop_count_and_rtt_of(dest_name):
                 tries -= 1
 
         if not reachable:
-            print("This site is unreachable after 3 trials.")
+            print(dest_name + " is unreachable after 3 trials.")
             return "Unreachable", "Unreachable"
 
         # unpack ip header to get ttl
