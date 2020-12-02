@@ -82,6 +82,10 @@ def get_hop_count_and_rtt_of(dest_name):
         node_ttl = ip_header[5]
         ttl = node_ttl
 
+        # extract ICMP response source IP address
+        matchedIPAddress = False
+
+
         snd_socket.close()
         rcv_socket.close()
 
