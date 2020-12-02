@@ -138,14 +138,17 @@ def get_hop_count_and_rtt_of(dest_addr):
         matched_IP_addr = True if src_IP_addr == dest_addr else False
 
         # extract ICMP packet ID
-        #for part in ip_header:
-        #    print(part)
+        packet_IP_ID = ip_header[3]
 
         # extract ICMP packet's src port
-        src_IP_port_number = ip_header[7]
-        print('ICMP src port: ' + str(src_IP_port_number))
-        matched_IP_src_port = True if src_IP_port_number == port else False
-        
+        #tcp_header_packed = icmp_packet[48:68]
+        #tcp_header = struct.unpack('!HHLLBBH', tcp_header_packed)
+        #src_IP_port_number = tcp_header[1]
+        #print('ICMP src port: ' + str(src_IP_port_number))
+        #matched_IP_src_port = True if src_IP_port_number == port else False
+        for part in ip_header:
+            print(part)
+
         # close all sockets
         snd_socket.close()
         rcv_socket.close()
