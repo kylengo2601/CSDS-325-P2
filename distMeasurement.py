@@ -8,11 +8,12 @@ import sys
 max_hop = 32
 port = 33434
 msg = 'Measurement for class project. Questions to student ktn27@case.edu or professor mxr136@case.edu'
-payload = bytes(msg, 'ascii')
+payload = bytes(msg + 'a' * (1472 - len(msg)), 'ascii')
 VERBOSE = True
 
 
 def set_socket(ttl):
+    # creating receive and send sockets
     try:
         rcv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
     except socket.error as exc:
