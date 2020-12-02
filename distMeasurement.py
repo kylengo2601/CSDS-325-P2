@@ -14,16 +14,16 @@ VERBOSE = True
 
 def set_socket(ttl):
     try:
-	    rcv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
+        rcv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
     except socket.error as exc:
-	    print('Receive socket could not be created. Error : ' + str(exc))
-	    sys.exit()
+        print('Receive socket could not be created. Error : ' + str(exc))
+        sys.exit()
 
     try:
-	    snd_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        snd_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     except socket.error as exc:
-	    print('Send socket could not be created. Error : ' + str(exc))
-	    sys.exit()
+        print('Send socket could not be created. Error : ' + str(exc))
+        sys.exit()
     
     rcv_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
     snd_socket.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
@@ -114,4 +114,4 @@ def main(targets, results):
 
 
 if __name__ == "__main__":
-    main("target_dests.txt", "trace_results.csv")
+    main("targets.txt", "trace_results.csv")
