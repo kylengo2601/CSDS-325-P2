@@ -145,7 +145,7 @@ def get_hop_count_and_rtt_of(dest_addr):
         #src_IP_port_number = tcp_header[1]
         #print('ICMP src port: ' + str(src_IP_port_number))
         #matched_IP_src_port = True if src_IP_port_number == port else False
-        for part in ip_header:
+        for part in icmp_packet[0:58]:
             print(part)
 
         # close all sockets
