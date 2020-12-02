@@ -148,7 +148,7 @@ def get_hop_count_and_rtt_of(dest_addr):
         udp_header_packed = icmp_packet[:28]
         #udp_header = struct.unpack('!H', udp_header_packed)
         for part in udp_header_packed:
-            print(ord(part))
+            print(part)
 
         # close all sockets
         snd_socket.close()
