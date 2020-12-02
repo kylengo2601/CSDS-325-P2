@@ -13,7 +13,7 @@ port = 33434
 VERBOSE = True
 
 
-def set_socket(ttl):
+def create_socket(ttl):
     # creating receive and send sockets
     try:
         rcv_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
@@ -92,7 +92,7 @@ def get_hop_count_and_rtt_of(dest_addr):
     while True:
 
         dest_ip = socket.gethostbyname(dest_addr)
-        rcv_socket, snd_socket = set_socket(ttl)
+        rcv_socket, snd_socket = create_socket(ttl)
         rcv_socket.bind(("", port))
 
         select_status = select.select([rcv_socket], [], [], 2)
@@ -138,15 +138,20 @@ def get_hop_count_and_rtt_of(dest_addr):
         matched_IP_addr = True if src_IP_addr == dest_addr else False
 
         # extract ICMP packet ID
-        for part in ip_header:
-            print(part)
+        #for part in ip_header:
+        #    print(part)
+
+        # extract ICMP packet's src port
+        src_IP_port_number = ip_header[7]
+        print('ICMP src port: ' + str(src_IP_port_number))
+        matched_IP_src_port = True if src_IP_port_number == port else False
         
         # close all sockets
         snd_socket.close()
         rcv_socket.close()
 
         # exit the loop when reached dest or exceeded max # of hops
-        if node_addr == dest_addr or node_ttl <= 0:
+        if node_addr == dest_ip or node_ttl <= 0:
             hop_count = max_hop - node_ttl
 
             original_msg = []
@@ -156,7 +161,7 @@ def get_hop_count_and_rtt_of(dest_addr):
                 original_msg = icmp_packet[56:]
 
             rtt = int((time.time() - rtt)*1000)
-            print('<Sys>: Site: %s, IP: %s HOP_COUNT: %s, RTT: %d ms, bytes of initial message in ICMP: %d ' % (
+            print('Site: %s, IP: %s HOP_COUNT: %s, RTT: %d ms, bytes of initial message in ICMP: %d ' % (
                 dest_ip, dest_addr, hop_count, rtt, len(original_msg)))
             return hop_count, rtt, len(original_msg)
 
