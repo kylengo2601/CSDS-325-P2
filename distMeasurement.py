@@ -82,7 +82,6 @@ def create_header(dest_ip):
 
 
 
-
     return ip_id, payload
 
 def get_hop_count_and_rtt_of(dest_addr):
@@ -93,7 +92,7 @@ def get_hop_count_and_rtt_of(dest_addr):
 
         dest_ip = socket.gethostbyname(dest_addr)
         rcv_socket, snd_socket = create_socket(ttl)
-        rcv_socket.bind(("", port))
+        rcv_socket.bind(("", 80))
 
         select_status = select.select([rcv_socket], [], [], 2)
 
