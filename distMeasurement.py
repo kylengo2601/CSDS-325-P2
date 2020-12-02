@@ -7,6 +7,8 @@ import sys
 
 source_ip = '18.232.157.167'
 max_hop = 32
+msg = 'Measurement for class project. Questions to student ktn27@case.edu or professor mxr136@case.edu'
+payload = bytes(msg, 'ascii')
 port = 33434
 VERBOSE = True
 
@@ -79,8 +81,7 @@ def create_header(dest_ip):
     tcp_header = struct.pack('!HHLLBBHHH' , tcp_source, tcp_dest, tcp_seq, tcp_ack_seq, tcp_offset_res, tcp_flags,  tcp_window, tcp_check, tcp_urg_ptr)
 
 
-    msg = 'Measurement for class project. Questions to student ktn27@case.edu or professor mxr136@case.edu'
-    payload = ip_header + tcp_header + bytes(msg, 'ascii')
+
 
     return ip_id, payload
 
@@ -100,8 +101,6 @@ def get_hop_count_and_rtt_of(dest_addr):
         node_name = None
         tries = 3
         reachable = False
-
-        ip_id, payload = create_header(dest_ip)
 
         snd_socket.sendto(payload, (dest_ip, port))
 
@@ -124,7 +123,7 @@ def get_hop_count_and_rtt_of(dest_addr):
                 tries -= 1
 
         if not reachable:
-            print(dest_name + " is unreachable after 3 trials.")
+            print(dest_addr + " is unreachable after 3 trials.")
             return "Unreachable", "Unreachable"
 
         # unpack ip header to get ttl
