@@ -146,7 +146,8 @@ def get_hop_count_and_rtt_of(dest_addr):
         #print('ICMP src port: ' + str(src_IP_port_number))
         #matched_IP_src_port = True if src_IP_port_number == port else False
         udp_header_packed = icmp_packet[:28]
-        print(udp_header_packed)
+        udp_header = struct.unpack('!H', udp_header_packed)
+        print(udp_header)
 
         # close all sockets
         snd_socket.close()
