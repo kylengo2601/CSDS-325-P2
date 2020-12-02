@@ -84,7 +84,8 @@ def get_hop_count_and_rtt_of(dest_name):
 
         # extract ICMP response source IP address
         matchedIPAddress = False
-
+        srcIPAddress = ip_header[8]
+        print(srcIPAddress)
 
         snd_socket.close()
         rcv_socket.close()
