@@ -83,10 +83,18 @@ def get_hop_count_and_rtt_of(dest_name):
         ttl = node_ttl
 
         # extract ICMP response source IP address
-        matchedIPAddress = False
-        srcIPAddress = ip_header[8]
-        print(srcIPAddress)
+		#testing which IP is dest and which is src
+        #print('From packet sent: ' + dest_addr)
+        src_IP_addr_byte = ip_header[9]
+        src_IP_addr = str(src_IP_addr_byte[0]) + '.' + str(src_IP_addr_byte[1]) + '.' + str(src_IP_addr_byte[2]) + '.' + str(src_IP_addr_byte[3])
+        #print('From response: ' + des_IP_address)
+        matched_IP_addr = True if src_IP_addr == dest_addr else False
 
+		# extract ICMP packet ID
+        for part in ip_header:
+            print(part)
+        
+		# close all sockets
         snd_socket.close()
         rcv_socket.close()
 
