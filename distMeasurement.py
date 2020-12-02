@@ -5,10 +5,9 @@ import select
 import sys
 
 
+source_ip = '18.232.157.167'
 max_hop = 32
 port = 33434
-msg = 'Measurement for class project. Questions to student ktn27@case.edu or professor mxr136@case.edu'
-payload = bytes(msg + 'a' * (1472 - len(msg)), 'ascii')
 VERBOSE = True
 
 
@@ -34,35 +33,35 @@ def set_socket(ttl):
 
     return rcv_socket, snd_socket
 
-def get_header():
-    source_ip = '18.232.157.167'
+def create_header(dest_ip):
 
-	# ip header fields
+
+    # ip header fields
     ip_ihl = 5
     ip_ver = 4
     ip_tos = 0
     ip_tot_len = 0	# kernel will fill the correct total length
-    ip_id = 54321	#Id of this packet
+    ip_id = 54321	# ID of this packet
     ip_frag_off = 0
     ip_ttl = 255
     ip_proto = socket.IPPROTO_TCP
     ip_check = 0	# kernel will fill the correct checksum
-    ip_saddr = socket.inet_aton ( source_ip )	#Spoof the source ip address if you want 
+    ip_saddr = socket.inet_aton ( source_ip )
     ip_daddr = socket.inet_aton ( dest_ip )
 
-    ip_ihl_ver = (version << 4) + ihl
+    ip_ihl_ver = (ip_ver << 4) + ip_ihl
 
-	# the ! in the pack format string means network order
+    # the ! in the pack format string means network order
     ip_header = pack('!BBHHHBBH4s4s' , ip_ihl_ver, ip_tos, ip_tot_len, ip_id, ip_frag_off, ip_ttl, ip_proto, ip_check, ip_saddr, ip_daddr)
     
     
-	# tcp header fields
-    tcp_source = 1234	# source port
+    # tcp header fields
+    tcp_source = port	# source port
     tcp_dest = 80	# destination port
     tcp_seq = 454
     tcp_ack_seq = 0
     tcp_doff = 5	#4 bit field, size of tcp header, 5 * 4 = 20 bytes
-	#tcp flags
+    #tcp flags
     tcp_fin = 0
     tcp_syn = 1
     tcp_rst = 0
@@ -76,16 +75,22 @@ def get_header():
     tcp_offset_res = (tcp_doff << 4) + 0
     tcp_flags = tcp_fin + (tcp_syn << 1) + (tcp_rst << 2) + (tcp_psh <<3) + (tcp_ack << 4) + (tcp_urg << 5)
 
-	# the ! in the pack format string means network order
-    tcp_header = pack('!HHLLBBHHH' , tcp_source, tcp_dest, tcp_seq, tcp_ack_seq, tcp_offset_res, tcp_flags,  tcp_window, tcp_check, tcp_urg_ptr)
+    # the ! in the pack format string means network order
+    tcp_header = struct.pack('!HHLLBBHHH' , tcp_source, tcp_dest, tcp_seq, tcp_ack_seq, tcp_offset_res, tcp_flags,  tcp_window, tcp_check, tcp_urg_ptr)
 
-def get_hop_count_and_rtt_of(dest_name):
+
+    msg = 'Measurement for class project. Questions to student ktn27@case.edu or professor mxr136@case.edu'
+    payload = ip_header + tcp_header + bytes(msg, 'ascii')
+
+    return ip_id, payload
+
+def get_hop_count_and_rtt_of(dest_addr):
     ttl = max_hop
     rtt = time.time()
 
     while True:
 
-        dest_addr = socket.gethostbyname(dest_name)
+        dest_ip = socket.gethostbyname(dest_addr)
         rcv_socket, snd_socket = set_socket(ttl)
         rcv_socket.bind(("", port))
 
@@ -96,7 +101,9 @@ def get_hop_count_and_rtt_of(dest_name):
         tries = 3
         reachable = False
 
-        snd_socket.sendto(payload, (dest_name, port))
+        ip_id, payload = create_header(dest_ip)
+
+        snd_socket.sendto(payload, (dest_ip, port))
 
         while not reachable and tries > 0 and select_status:
             try:
@@ -127,18 +134,15 @@ def get_hop_count_and_rtt_of(dest_name):
         ttl = node_ttl
 
         # extract ICMP response source IP address
-		#testing which IP is dest and which is src
-        #print('From packet sent: ' + dest_addr)
         src_IP_addr_byte = ip_header[9]
         src_IP_addr = str(src_IP_addr_byte[0]) + '.' + str(src_IP_addr_byte[1]) + '.' + str(src_IP_addr_byte[2]) + '.' + str(src_IP_addr_byte[3])
-        #print('From response: ' + des_IP_address)
         matched_IP_addr = True if src_IP_addr == dest_addr else False
 
-		# extract ICMP packet ID
+        # extract ICMP packet ID
         for part in ip_header:
             print(part)
         
-		# close all sockets
+        # close all sockets
         snd_socket.close()
         rcv_socket.close()
 
@@ -154,7 +158,7 @@ def get_hop_count_and_rtt_of(dest_name):
 
             rtt = int((time.time() - rtt)*1000)
             print('<Sys>: Site: %s, IP: %s HOP_COUNT: %s, RTT: %d ms, bytes of initial message in ICMP: %d ' % (
-                dest_name, dest_addr, hop_count, rtt, len(original_msg)))
+                dest_ip, dest_addr, hop_count, rtt, len(original_msg)))
             return hop_count, rtt, len(original_msg)
 
 
