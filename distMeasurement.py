@@ -9,7 +9,7 @@ source_ip = '18.232.157.167'
 max_hop = 32
 msg = 'Measurement for class project. Questions to student ktn27@case.edu or professor mxr136@case.edu'
 payload = bytes(msg, 'ascii')
-port = 33434
+dest_port = 33434
 VERBOSE = True
 
 
@@ -35,56 +35,8 @@ def create_socket(ttl):
 
     return rcv_socket, snd_socket
 
-def create_header(dest_ip):
 
-
-    # ip header fields
-    ip_ihl = 5
-    ip_ver = 4
-    ip_tos = 0
-    ip_tot_len = 0	# kernel will fill the correct total length
-    ip_id = 54321	# ID of this packet
-    ip_frag_off = 0
-    ip_ttl = 255
-    ip_proto = socket.IPPROTO_TCP
-    ip_check = 0	# kernel will fill the correct checksum
-    ip_saddr = socket.inet_aton ( source_ip )
-    ip_daddr = socket.inet_aton ( dest_ip )
-
-    ip_ihl_ver = (ip_ver << 4) + ip_ihl
-
-    # the ! in the pack format string means network order
-    ip_header = pack('!BBHHHBBH4s4s' , ip_ihl_ver, ip_tos, ip_tot_len, ip_id, ip_frag_off, ip_ttl, ip_proto, ip_check, ip_saddr, ip_daddr)
-    
-    
-    # tcp header fields
-    tcp_source = port	# source port
-    tcp_dest = 80	# destination port
-    tcp_seq = 454
-    tcp_ack_seq = 0
-    tcp_doff = 5	#4 bit field, size of tcp header, 5 * 4 = 20 bytes
-    #tcp flags
-    tcp_fin = 0
-    tcp_syn = 1
-    tcp_rst = 0
-    tcp_psh = 0
-    tcp_ack = 0
-    tcp_urg = 0
-    tcp_window = socket.htons (5840)	#	maximum allowed window size
-    tcp_check = 0
-    tcp_urg_ptr = 0
-
-    tcp_offset_res = (tcp_doff << 4) + 0
-    tcp_flags = tcp_fin + (tcp_syn << 1) + (tcp_rst << 2) + (tcp_psh <<3) + (tcp_ack << 4) + (tcp_urg << 5)
-
-    # the ! in the pack format string means network order
-    tcp_header = struct.pack('!HHLLBBHHH' , tcp_source, tcp_dest, tcp_seq, tcp_ack_seq, tcp_offset_res, tcp_flags,  tcp_window, tcp_check, tcp_urg_ptr)
-
-
-
-    return ip_id, payload
-
-def get_hop_count_and_rtt_of(dest_addr):
+def get_hop_count_and_rtt_of(dest_addr, src_port):
     ttl = max_hop
     rtt = time.time()
 
@@ -92,7 +44,8 @@ def get_hop_count_and_rtt_of(dest_addr):
 
         dest_ip = socket.gethostbyname(dest_addr)
         rcv_socket, snd_socket = create_socket(ttl)
-        rcv_socket.bind(("", 80))
+        rcv_socket.bind(("", dest_port))
+        snd_socket.bind(("", src_port))
 
         select_status = select.select([rcv_socket], [], [], 2)
 
@@ -101,7 +54,7 @@ def get_hop_count_and_rtt_of(dest_addr):
         tries = 3
         reachable = False
 
-        snd_socket.sendto(payload, (dest_ip, port))
+        snd_socket.sendto(payload, (dest_ip, dest_port))
 
         while not reachable and tries > 0 and select_status:
             try:
@@ -139,22 +92,18 @@ def get_hop_count_and_rtt_of(dest_addr):
         # extract ICMP packet ID
         packet_IP_ID = ip_header[3]
 
-        # extract ICMP packet's src port
-        #tcp_header_packed = icmp_packet[48:68]
-        #tcp_header = struct.unpack('!HHLLBBH', tcp_header_packed)
-        #src_IP_port_number = tcp_header[1]
-        #print('ICMP src port: ' + str(src_IP_port_number))
-        #matched_IP_src_port = True if src_IP_port_number == port else False
+        # extract ICMP packet's src port from udp header
         udp_header_packed = icmp_packet[48:50]
         udp_header = struct.unpack('!H', udp_header_packed)
-        print(udp_header)
-        #udp_header = struct.unpack('!H', udp_header_packed)
-        # for part in udp_header_packed:
-        #     print(part)
+        port_from_packet = udp_header[0]
+
 
         # close all sockets
         snd_socket.close()
         rcv_socket.close()
+
+        # create a new unique source port number
+        src_port += 1
 
         # exit the loop when reached dest or exceeded max # of hops
         if node_addr == dest_ip or node_ttl <= 0:
@@ -176,10 +125,12 @@ def main(targets, results):
 
     targets_list = open(targets).read().splitlines()
     result = open(results, 'w')
+    src_port = 60000
 
     for target in targets_list:
-        hop_count, rtt, size_of_initial_msg = get_hop_count_and_rtt_of(target)
+        hop_count, rtt, size_of_initial_msg = get_hop_count_and_rtt_of(target, src_port)
         result.write('%s, %s, %s, %s\n' % (target, hop_count, rtt, size_of_initial_msg))
+        src_port += 1
 
     print('Probing finished.')
     result.close()
