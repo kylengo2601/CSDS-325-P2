@@ -96,6 +96,8 @@ def get_hop_count_and_rtt_of(dest_addr, src_port):
         udp_header_packed = icmp_packet[48:50]
         udp_header = struct.unpack('!H', udp_header_packed)
         port_from_packet = udp_header[0]
+        print('From packet: ' + str(port_from_packet))
+        print('From socket: ' + str(src_port))
 
 
         # close all sockets
