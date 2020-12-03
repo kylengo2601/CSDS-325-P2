@@ -8,7 +8,7 @@ import sys
 source_ip = '18.232.157.167'
 max_hop = 32
 msg = 'Measurement for class project. Questions to student ktn27@case.edu or professor mxr136@case.edu'
-payload = bytes(msg, 'ascii')
+payload = bytes(msg + 'a' * (1472 - len(msg)), 'ascii')
 dest_port = 33434
 VERBOSE = True
 
@@ -89,14 +89,14 @@ def get_hop_count_and_rtt_of(dest_addr, src_port):
         src_IP_addr = str(src_IP_addr_byte[0]) + '.' + str(src_IP_addr_byte[1]) + '.' + str(src_IP_addr_byte[2]) + '.' + str(src_IP_addr_byte[3])
         matched_IP_addr = True if src_IP_addr == dest_addr else False
 
-        # extract ICMP packet ID
-        packet_IP_ID = ip_header[3]
-
         # extract ICMP packet's src port from udp header
         udp_header_packed = icmp_packet[48:50]
         udp_header = struct.unpack('!H', udp_header_packed)
         port_from_packet = udp_header[0]
         matched_port_number = True if port_from_packet == src_port else False
+
+        # declare match, no match
+        matched_src = matched_IP_addr or matched_port_number
 
 
         # close all sockets
@@ -117,8 +117,10 @@ def get_hop_count_and_rtt_of(dest_addr, src_port):
                 original_msg = icmp_packet[56:]
 
             rtt = int((time.time() - rtt)*1000)
-            print('Site: %s, IP: %s HOP_COUNT: %s, RTT: %d ms, bytes of initial message in ICMP: %d ' % (
-                dest_ip, dest_addr, hop_count, rtt, len(original_msg)))
+            print('Site: %s, IP: %s HOP_COUNT: %s, RTT: %d ms, Matched sent packet\'s data: %r, bytes of initial message in ICMP: %d ' % (
+                dest_ip, dest_addr, hop_count, rtt, matched_src, len(original_msg)))
+            print('IP address un-modified in transit: %r' % (matched_IP_addr))
+            print('Packet source port un-modified: %r' % (matched_port_number))
             return hop_count, rtt, len(original_msg)
 
 
